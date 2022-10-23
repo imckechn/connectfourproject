@@ -25,10 +25,10 @@ def graph_ucb_temperature(n_games, time, batch_size, confidence_level, temperatu
         data['temperature'].append(temp)
         data['score'].append(score.item())
         data['sem'].append((jnp.std(results) / jnp.sqrt(n_games)).item())
-        print(jnp.mean(jnp.power(results - score, 2)))
 
     return pd.DataFrame(data)
 
+'''
 def graph_ucb_confidence_level(n_games, time, batch_size, confidence_levels=[0, 0.5, 1.0, math.sqrt(2), 1.5, 2.0, 2.5], opponent=agents.RolloutAgent(batch_size=100), config=default_config, key=None):
     data = {'confidence_levels': [], 'score': [], 'sem': []}
 
@@ -89,4 +89,8 @@ for i in range(len(settings)):
     key,subkey = jax.random.split(key)
     data = graph_ucb_confidence_level_p2(500, *(settings[i]), opponent=agents.RolloutAgent(batch_size=opponent_settings[i]), key = subkey)
     data.to_pickle(f'{file_name}{i}')
+'''
 
+key = jax.random.PRNGKey(int(time.time()))
+data = graph_ucb_temperature(1000, 50, 10, math.sqrt(2), temperatures=[0.0000000001, 0.2], opponent=agents.RolloutAgent(batch_size=100), key=key)
+data.to_pickle('./data/ucb2/temperatureplot')

@@ -202,6 +202,9 @@ def get_winners(state, config=default_config):
 def get_game_shape(state):
   return state[0].shape[:-1]
 
+def get_all_shapes(state):
+  return (state[0].shape, state[1].shape, state[2].shape, (1))
+
 @jax.jit
 def get_player_turn(state):
   '''gets whos turn it currently is'''

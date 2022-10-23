@@ -17,8 +17,7 @@ class UCBRolloutExpertAgent(agents.UCBRolloutAgent):
 
     def get_ucb_scores(self, time):
         '''Calculates the ucb score according to the UCB-selection rule'''
-            
-
+        
         return self.total_scores / self.counts + self.confidence_level * jnp.sqrt(jnp.log(time) / self.counts)
 
     def initialize_rollout_agent(self, key):

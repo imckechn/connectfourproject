@@ -2,7 +2,18 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-data = pd.read_pickle('./data/ucb/ro0')
+f, ax = plt.subplots(1,1)
+x_col = 'temperature'
+y_col = 'score'
+sem_col = 'sem'
+
+data = pd.read_pickle('./data/ucb2/temperatureplot')
+sns.scatterplot(data=data, x=x_col, y=y_col, label='Rollout (n=100)').set(title="score (mean of 1000 games) on temperature as first player")
+plt.fill_between(data[x_col], data[y_col] - data[sem_col] / 2, data[y_col] + data[sem_col]/2, color='tab:blue', alpha=0.1)
+
+plt.axhline(linestyle='--', lw=1, color='black')
+plt.legend(fontsize='x-small', title='opponent')
+plt.savefig('./plots/ucb2/temp.png')
 
 f, ax = plt.subplots(1,1)
 x_col = 'confidence_levels'
