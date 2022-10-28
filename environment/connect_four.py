@@ -43,7 +43,7 @@ def get_piece_locations(config=default_config):
 def state_to_array(state, piece_locations, config=default_config):
   current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
   opponent = jnp.bitwise_not(is_empty_intersection(get_opponent_state(state)[0], piece_locations))
-  return (current_player + 2 * opponent).astype(float)
+  return (current_player - 1 * opponent).astype(float)
 
 @jax.jit
 def is_empty_intersection(bb_a, bb_b):

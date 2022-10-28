@@ -9,30 +9,19 @@ import agents
 import haiku as hk
 
 class UCBRolloutExpertAgent(agents.UCBRolloutAgent):
-    def __init__(self, time, confidence_level, key, temperature=2, batch_size=10, config=default_config):
+    '''UCB Rollout Expert Agent is UCB rollouts but the rollout_agent should be guided by a model'''
+
+    def __init__(self, time, confidence_level, rollout_agent, temperature=2, batch_size=10, config=default_config):
         super().__init__(time=time, confidence_level=confidence_level, batch_size=batch_size, config=config)
 
         self.temperature = temperature
-        self.rollout_agent = self.initialize_rollout_agent(key)
+        self.rollout_agent = rollout_agent
 
-    def get_ucb_scores(self, time):
+    def get_ucb_scores(self, state, time):
         '''Calculates the ucb score according to the UCB-selection rule'''
-        
-        return self.total_scores / self.counts + self.confidence_level * jnp.sqrt(jnp.log(time) / self.counts)
+        return self.total_scores / self.counts + self.confidence_level * (self.rollout_agent.get_model_predictions(state)[..., jnp.newaxis] / (1 + self.counts))
 
-    def initialize_rollout_agent(self, key):
-        def f(x):
-            return hk.Sequential([
-                hk.Linear(300), jax.nn.relu,
-                hk.Linear(100), jax.nn.relu,
-                hk.Linear(self.config['width'])
-            ])(x)
-
-        f = hk.without_apply_rng(hk.transform(f))
-
-        return agents.GuidedRandomAgent(f, key, self.config)
-
-    def choose(self, state, key=None):
+    def choose(self, state, key=None, verbose=False):
         if key == None:
             key = jax.random.PRNGKey(int(time.time()))
 
@@ -46,5 +35,9 @@ class UCBRolloutExpertAgent(agents.UCBRolloutAgent):
             key, subkey = jax.random.split(key)
             self.do_ucb_step(state, i, subkey)
 
-        return self.get_ucb_action(state, self.time)
+        key, subkey = jax.random.split(key)
+        shape = get_game_shape(state)
+        legal = get_legal_cols(state)
+
+        return self.get_final_choice(shape, legal, subkey, verbose=verbose)[..., None]
 

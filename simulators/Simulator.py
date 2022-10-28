@@ -23,12 +23,27 @@ class Simulator():
     choices = self.agents[self.game_state[3]&1].choose(self.game_state, subkey)
     self.game_state = play_move(self.game_state, choices.astype(jnp.uint64))
 
+  def reset_simulator(self):
+    self.game_state = init_game(get_game_shape(self.game_state))  
+    self.key, subkey = jax.random.split(self.key)
+
+  def print_progress(self, iteration):
+    total = self.config['width'] * self.config['height']
+    length = 100
+    fill = '█'
+    percent = ("{0:.2f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\rGame Progress | {bar} | {percent}% Complete \r')
+    if iteration == total:
+      print()
+
   def run(self, verbose=False):
     # games should only take 42 moves if all are legal.
     for i in jnp.arange(self.config['width'] * self.config['height']):
 
       if verbose:
-        print(f'move # {i+1}')
+        self.print_progress(i)
 
       self.step()
 

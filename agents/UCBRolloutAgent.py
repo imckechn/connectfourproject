@@ -30,14 +30,14 @@ class UCBRolloutAgent(agents.RolloutAgent):
         self.counts = jnp.zeros((*get_game_shape(state), self.config['width'], 1))
         self.total_scores = jnp.zeros_like(self.counts)
 
-    def get_ucb_scores(self, time):
+    def get_ucb_scores(self, state, time):
         '''Calculates the ucb score according to the UCB-selection rule'''
         return self.total_scores / self.counts + self.confidence_level * jnp.sqrt(jnp.log(time) / self.counts)
 
     def get_ucb_action(self, state, time):
         '''Gets the next legal action to choose based on the UCB-selection rule'''
 
-        ucb_score = self.get_ucb_scores(time)
+        ucb_score = self.get_ucb_scores(state, time)
         legal = get_legal_cols(state, self.config)[..., None]
         legal_score = jnp.where(legal, ucb_score, jnp.nan)
 
@@ -81,7 +81,6 @@ class UCBRolloutAgent(agents.RolloutAgent):
 
         key, subkey = jax.random.split(key)
         shape = get_game_shape(state)
-        
         legal = get_legal_cols(state)
 
         return self.get_final_choice(shape, legal, subkey, verbose=verbose)[..., None]
