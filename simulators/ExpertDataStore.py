@@ -1,4 +1,6 @@
 import numpy as np
+import csv
+import pickle
 from config import default_config
 
 class ExpertDataStore():
@@ -46,3 +48,20 @@ class ExpertDataStore():
         self.data_move[self.data_pointer] = state[3]
         self.data_action_counts[self.data_pointer] = counts
         self.data_pointer += 1
+
+    def export_to_csv(self, fname):
+        with open(fname, 'w') as file:
+            headers = ['position', 'mask', 'active', 'move#'] + [f'counts{i}' for i in range(self.config['width'])]
+            writer = csv.writer(file)
+            writer.writerow(headers)
+
+            for i in range(self.data_pointer):
+                pos = self.data_position[i].ravel()
+                mask = self.data_mask[i].ravel()
+                counts = self.data_action_counts[i].ravel().reshape((-1, 7))
+                active = self.data_active[i].ravel()
+                move = self.data_move[i]
+
+                for a, p, m, c in zip(active, pos, mask, counts):
+                    if a == 1:
+                        writer.writerow([p, m, a, int(move)] + c.tolist())
