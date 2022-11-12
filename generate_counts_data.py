@@ -19,7 +19,7 @@ def generate_game_data(n_games=1, key=None, config=config, verbose=False):
     game_state = init_game(n_games)
     store = ExpertDataStore(config['width'] * config['height'], get_all_shapes(game_state), config)
 
-    agent = [agents.UCBRolloutAgent(50, math.sqrt(2), 0.01, 100, config), agents.UCBRolloutAgent(50, math.sqrt(2), 0.01, 100, config)]
+    agent = [agents.UCBRolloutAgent(50, math.sqrt(2), 100, config), agents.UCBRolloutAgent(50, math.sqrt(2), 100, config)]
     
     if key == None:
         key = jax.random.PRNGKey(int(time.time()))
@@ -52,5 +52,5 @@ if __name__ == "__main__":
     assert len(args) > 2, 'must include number of games'
 
 
-    store = generate_game_data(n_games=int(args[2]))
+    store = generate_game_data(n_games=int(args[2]), verbose=True)
     store.export_to_csv(args[1])

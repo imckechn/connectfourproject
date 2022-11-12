@@ -45,6 +45,8 @@ class Simulator():
       if verbose:
         self.print_progress(i)
 
-      self.step()
+      self.step(verbose)
+      if not any_active_games(self.game_state):
+        break
 
     return get_winners(self.game_state, self.config)

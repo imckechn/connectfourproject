@@ -56,7 +56,9 @@ def train_model_from_csv(fname, epochs, model, params, key, batch_size=None, ver
         batch_size = n_data
 
     # convert counts to probabilties
-    probabilities = counts / counts.sum(axis=1)[..., None]
+    temperature = 0.000001
+    logits = 1/temperature * jnp.log(counts)
+    probabilities = jax.nn.softmax(logits)
 
     # initialize the loss function and it's gradient
     loss = lambda params, x, y : tx.softmax_cross_entropy(model.apply(params, x), y).mean()
@@ -81,24 +83,23 @@ def train_model_from_csv(fname, epochs, model, params, key, batch_size=None, ver
     for epoch in range(epochs):
         # shuffle the data
         key, subkey = jax.random.split(key)
-        shuffled_game_states, shuffled_probabilites = shuffle_states(game_states, probabilities, n_data, subkey)
 
         print(f'Epoch # {epoch}')
 
-        position, mask, active, move = shuffled_game_states
+        position, mask, active, move = game_states
         for i in range(n_iter):
             if ((i / n_iter)*100) % 1 == 0:
                 print(i / n_iter * 100, "%")
             batched_game_states = (position[i:i+batch_size], mask[i:i+batch_size], active[i:i+batch_size], move[i:i+batch_size])
-            batched_probabilities = shuffled_probabilites[i:i+batch_size]
+            batched_probabilities = probabilities[i:i+batch_size]
 
-            x = state_to_array(batched_game_states, piece_locations)
+            x = state_to_array_3(batched_game_states, piece_locations)
             
             value, grads = value_and_grad_loss(params, x, batched_probabilities)
             updates, opt_state = optimizer.update(grads, opt_state)
             params = tx.apply_updates(params, updates)
 
-        x = state_to_array(game_states, piece_locations)
+        x = state_to_array_3(game_states, piece_locations)
         
         data['epoch'].append(epoch)
         data['CEL'].append(float(loss(params, x, probabilities)))
@@ -110,16 +111,24 @@ def train_model_from_csv(fname, epochs, model, params, key, batch_size=None, ver
     return params, pd.DataFrame(data)
 
 if __name__ == "__main__":
+
+    '''command line usage: python3 train_model_from_csv.py <filepath>.csv <epochs> [batch_size = None]'''
+
     args = sys.argv
     
     assert len(args) > 1, 'must give file name'
     assert len(args) > 2, 'must give number of epochs'
 
+    if len(args) > 3:
+        batch_size = int(args[3])
+    else:
+        batch_size=None
+
     def model(x):
         return hk.Sequential([
-            hk.Linear(100), jax.nn.relu,
-            hk.Linear(100), jax.nn.relu,
-            hk.Linear(config['width'])
+            hk.Linear(100, w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal')), jax.nn.relu,
+            hk.Linear(100, w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal')), jax.nn.relu,
+            hk.Linear(config['width'], w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal'))
         ])(x)
 
 
@@ -132,13 +141,14 @@ if __name__ == "__main__":
     except:
         key = jax.random.PRNGKey(int(time.time()))
         t_game = init_game(1)
-        params = model.init(key, state_to_array(t_game, get_piece_locations()))
+        params = model.init(key, state_to_array_3(t_game, get_piece_locations()))
     
     key = jax.random.PRNGKey(int(time.time()))
-    new_params, data = train_model_from_csv(args[1], int(args[2]), model, params, key, batch_size=None)
+    new_params, data = train_model_from_csv(args[1], int(args[2]), model, params, key, batch_size=batch_size)
 
     # save new parameters to pickle
-    pickle.dump(new_params, open("params.p", "wb"))
+    pickle.dump(new_params, open("params_c.p", "wb"))
+    pickle.dump(data, open("rep_3_data.pk", "wb"))
 
     # generate plot of the loss throughout training
     loss_plot = sns.lineplot(data = data, x='epoch', y='CEL')

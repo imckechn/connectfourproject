@@ -1,1 +1,1 @@
-default_config = {'width': 7, 'height': 6}
+default_config = {'width': 7, 'height': 6, 'temperature': 0.0001}

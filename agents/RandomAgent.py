@@ -10,7 +10,7 @@ class RandomAgent(agents.Agent):
   def __init__(self, config=default_config):
     super().__init__(config=config)
 
-  def choose(self, state, key=None):
+  def choose(self, state, key=None, verbose=False):
     '''chooses actions using the state'''
     # in: state - a 4-tuple with the current game state (position, mask, active, turn)
     #     key - the jax random key
@@ -18,7 +18,7 @@ class RandomAgent(agents.Agent):
 
     if key == None:
       key = jax.random.PRNGKey(int(time.time()))
-
+  
     scores = jax.random.uniform(key, shape=(*state[0].shape[:-1], self.config['width']))
     legal_cols = get_legal_cols(state)
     legal_scores = jnp.where(legal_cols, scores, jnp.nan)

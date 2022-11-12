@@ -7,12 +7,13 @@ import jax
 
 import agents
 
-class RolloutAgent(agents.Agent):
-    def __init__(self, config=default_config, batch_size=100):
+class GuidedRolloutAgent2(agents.RolloutAgent):
+    '''Rollout agent where the rollout agent is guided by a neural network'''
+    def __init__(self, rollout_agent, config=default_config, batch_size=100):
         super().__init__(config=config)
 
         self.batch_size = batch_size
-        self.rollout_agent = agents.RandomAgent()
+        self.rollout_agent = rollout_agent
 
     def do_batch_rollout(self, state, key):
         '''Runs the given states to the end of the games'''
@@ -45,5 +46,6 @@ class RolloutAgent(agents.Agent):
 
         if verbose:
             print(self.scores)
+            print(results.shape)
 
         return jnp.nanargmax(self.scores, axis=-1)[..., None]

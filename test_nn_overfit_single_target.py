@@ -1,7 +1,6 @@
 import jax, jax.numpy as jnp
+import seaborn as sns
 import time
-import agents
-import math
 
 import haiku as hk
 import optax as tx
@@ -13,15 +12,17 @@ from simulators.ExpertDataStore import ExpertDataStore
 
 def model(x):
     return hk.Sequential([
-        hk.Linear(300), jax.nn.relu,
-        hk.Linear(300), jax.nn.relu,
-        hk.Linear(config['width'])
+        hk.BatchNorm(True, True, 0.9), hk.Linear(100), jax.nn.relu,
+        hk.BatchNorm(True, True, 0.9), hk.Linear(100), jax.nn.relu,
+        hk.BatchNorm(True, True, 0.9), hk.Linear(config['width'])
     ])(x)
 
 model = hk.without_apply_rng(hk.transform(model))
 
 
 def test_with_single_target_data(params, model, epochs, outcome, learning_rate, n_samples, key, config):
+
+    data = {'epoch': [], 'CEL': []}
 
     pl = get_piece_locations(config)
     loss = lambda params, x, y : tx.softmax_cross_entropy(model.apply(params, x), y).mean()
@@ -39,6 +40,9 @@ def test_with_single_target_data(params, model, epochs, outcome, learning_rate, 
         game_state = init_game(100)
         x = state_to_array(game_state, pl)
         value, grads = value_and_grad_loss(params, x, outcome)
+
+        data['epoch'].append(i)
+        data['CEL'].append(float(value))
         
         print(f'cross-entropy loss: {value}')
         
@@ -52,6 +56,8 @@ def test_with_single_target_data(params, model, epochs, outcome, learning_rate, 
     print("target", outcome)
     print("actual", jnp.array([jnp.count_nonzero(samples == i) for i in range(7)]) / n_samples)
 
+    return data
+
 
 temp = init_game(1)
 x = state_to_array(temp, get_piece_locations(config))
@@ -59,5 +65,9 @@ key = jax.random.PRNGKey(int(time.time()))
 key, subkey1, subkey2 = jax.random.split(key, 3)
 
 params = model.init(subkey1, x)
-test_with_single_target_data(params, model, 100, jnp.array([0.4, 0.1, 0, 0.1, 0.3, 0.1, 0]), 1, 10000, subkey2, config)
+data = test_with_single_target_data(params, model, 1000, jnp.array([0.4, 0.1, 0, 0.1, 0.3, 0.1, 0]), 1, 10000, subkey2, config)
+
+loss_plot = sns.lineplot(data=data, x='epoch', y='CEL')
+loss_plot.get_figure().suptitle('Cross-Entropy Loss throughout training')
+loss_plot.get_figure().savefig('loss_stochastic')
 

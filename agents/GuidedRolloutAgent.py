@@ -21,7 +21,7 @@ class GuidedRolloutAgent(agents.RolloutAgent):
         sim = Simulator(p_state, agents=[self.rollout_agent, self.rollout_agent], key=key, config=self.config)
         return sim.run()
         
-    def choose(self, state, key=None):
+    def choose(self, state, key=None, verbose=False):
         '''chooses actions using the state'''
         # in: state - a 4-tuple with the current game state (position, mask, active, turn)
         #     key - the jax random key
@@ -44,4 +44,8 @@ class GuidedRolloutAgent(agents.RolloutAgent):
 
         self.scores = legal_scores * (2 * player_ix - 1)
 
-        return jnp.nanargmax(legal_scores * (2*player_ix - 1), axis=-1)[..., None]
+        if verbose:
+            print(self.scores)
+            print(results.shape)
+
+        return jnp.nanargmax(self.scores, axis=-1)[..., None]

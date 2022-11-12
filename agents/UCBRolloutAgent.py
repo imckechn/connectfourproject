@@ -8,7 +8,7 @@ import jax
 import agents
 
 class UCBRolloutAgent(agents.RolloutAgent):
-    def __init__(self, time, confidence_level, temperature=0.5, batch_size=10, config=default_config):
+    def __init__(self, time, temperature=1, batch_size=100, confidence_level=1, config=default_config):
         super().__init__(config=config, batch_size=batch_size)
 
         self.confidence_level = confidence_level
@@ -63,7 +63,7 @@ class UCBRolloutAgent(agents.RolloutAgent):
         if verbose:
             print(jax.nn.softmax(logits))
 
-        return choice
+        return choice.astype(jnp.uint64)
         
     def choose(self, state, key=None, verbose=False):
         if key == None:

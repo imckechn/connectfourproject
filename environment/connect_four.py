@@ -41,9 +41,29 @@ def get_piece_locations(config=default_config):
 
 @jax.jit
 def state_to_array(state, piece_locations, config=default_config):
+  '''Represents the game state in an (..., 42), array'''
+
   current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
   opponent = jnp.bitwise_not(is_empty_intersection(get_opponent_state(state)[0], piece_locations))
   return (current_player - 1 * opponent).astype(float)
+
+@jax.jit
+def state_to_array_2(state, piece_locations, config=default_config):
+  '''Represents the game state in an (..., 84), array'''
+
+  current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
+  opponent = jnp.bitwise_not(is_empty_intersection(get_opponent_state(state)[0], piece_locations))
+  return jnp.concatenate([current_player, opponent], axis=-1).astype(float)
+
+@jax.jit
+def state_to_array_3(state, piece_locations, config=default_config):
+  '''Represents the game state in an (..., 126) array'''
+
+  current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
+  opponent = jnp.bitwise_not(is_empty_intersection(get_opponent_state(state)[0], piece_locations))
+  mask = jnp.bitwise_not(is_empty_intersection(state[1], piece_locations))
+
+  return jnp.concatenate([current_player, opponent, mask], axis=-1).astype(float)
 
 @jax.jit
 def is_empty_intersection(bb_a, bb_b):
@@ -151,6 +171,11 @@ def update_active_games(state, config=default_config):
   active = 1 - (alignment(opponent_state, config) | alignment(state, config) | (count >= 41))
 
   return (position, mask, active, count)
+
+@jax.jit
+def any_active_games(state, config=default_config):
+  position, mask, active, count = state
+  return jnp.any(active)
 
 @jax.jit
 def play_move(state, col, config=default_config):
@@ -327,4 +352,4 @@ def draw_game(game_state, game_num = 0, player_color = ['red','black'], config=d
         piece = plt.Circle((x, y), 0.45, color=player_color[game_array[y, x] - 1])
         ax.add_patch(piece)
         
-  plt.show()
+  plt.savefig('fig.png')

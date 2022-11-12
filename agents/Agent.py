@@ -5,5 +5,5 @@ class Agent():
   def __init__(self, config=default_config):
     self.config = config
 
-  def choose(self, state, key=None):
+  def choose(self, state, key=None, verbose=False):
     pass

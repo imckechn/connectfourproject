@@ -1,7 +1,8 @@
 import numpy as np
 import csv
-import pickle
 from config import default_config
+import os
+from time import perf_counter
 
 class ExpertDataStore():
     '''Handles the data storing and saving for the game state and action counts'''
@@ -49,8 +50,14 @@ class ExpertDataStore():
         self.data_action_counts[self.data_pointer] = counts
         self.data_pointer += 1
 
-    def export_to_csv(self, fname):
-        with open(fname, 'w') as file:
+    def export_to_csv(self, fpath, fname):
+        # TODO: PROFILE THIS FUNCTION
+
+        if not os.path.exists(fpath):
+            os.makedirs(fpath)
+
+        start_time = perf_counter()
+        with open(fpath + fname, 'w') as file:
             headers = ['position', 'mask', 'active', 'move#'] + [f'counts{i}' for i in range(self.config['width'])]
             writer = csv.writer(file)
             writer.writerow(headers)
@@ -65,3 +72,6 @@ class ExpertDataStore():
                 for a, p, m, c in zip(active, pos, mask, counts):
                     if a == 1:
                         writer.writerow([p, m, a, int(move)] + c.tolist())
+        end_time = perf_counter()
+
+        print(f'Dataset stored to {fpath + fname} in {end_time - start_time} seconds.')

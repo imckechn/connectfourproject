@@ -9,7 +9,7 @@ class RandomPlusAgent(agents.Agent):
   def __init__(self, config=default_config):
     super().__init__(config=config)
 
-  def choose(self, state, key=None):
+  def choose(self, state, key=None, verbose=False):
     '''chooses actions using the state'''
     # in: state - a 4-tuple with the current game state (position, mask, active, turn)
     #     key - the jax random key
