@@ -57,7 +57,7 @@ class ExpertDataStore():
             os.makedirs(fpath)
 
         start_time = perf_counter()
-        with open(fpath + fname, 'w') as file:
+        with open(fpath + fname +'.csv', 'w') as file:
             headers = ['position', 'mask', 'active', 'move#'] + [f'counts{i}' for i in range(self.config['width'])]
             writer = csv.writer(file)
             writer.writerow(headers)
@@ -74,4 +74,4 @@ class ExpertDataStore():
                         writer.writerow([p, m, a, int(move)] + c.tolist())
         end_time = perf_counter()
 
-        print(f'Dataset stored to {fpath + fname} in {end_time - start_time} seconds.')
+        print(f'Dataset stored to {fpath + fname}.csv in {end_time - start_time} seconds.')

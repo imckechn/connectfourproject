@@ -1,5 +1,6 @@
 from environment.connect_four import *
 from simulators.ExpertDataStore import ExpertDataStore
+from simulators.Simulator import Simulator
 
 import jax, jax.numpy as jnp
 import haiku as hk
@@ -18,7 +19,7 @@ def load_data_into_state(fname):
     # header: position, mask, active, move#, counts0, counts1, counts2, counts3, counts4, counts5, counts6
 
     start_time = time.perf_counter()
-    data = pd.read_csv(fname)
+    data = pd.read_csv(fname + '.csv')
     n_data = len(data)
 
     position = jnp.array(data.loc[:, 'position'].astype(jnp.uint64))
@@ -28,7 +29,7 @@ def load_data_into_state(fname):
     counts = jnp.array(data.loc[:, 'counts0':'counts6'].astype(jnp.uint64))
     end_time = time.perf_counter()
 
-    print(f'Loaded {n_data} samples in {end_time - start_time} seconds.')
+    print(f'Loaded {n_data} samples. Time elapsed: {end_time - start_time} seconds.')
 
     return (position[..., None], mask[..., None], active[..., None], move[..., None]), counts, n_data
 
@@ -63,14 +64,16 @@ def UCB_self_play(agent, num_games, cpu_folder, cpu_name, key=None):
 
         i += 1
 
+        # after the 10th move we switch to lower temperature
         if i > 10:
             agent.temperature = 0.01
+
     end_time = time.perf_counter()
 
-    print(f'Play finished in {end_time - start_time} seconds.')
+    print(f'Play finished. Time elapsed: {end_time - start_time} seconds.')
 
     file_path = f'./datasets/{cpu_folder}/'
-    file_name = f'dataset_{cpu_name}_{datetime.datetime.today().strftime("%Y-%m-%d")}'
+    file_name = f'dataset_{cpu_name}'
 
     data_store.export_to_csv(file_path, file_name)
 
@@ -102,6 +105,7 @@ def UCB_self_play_train_model(fpath, fname, params, model, epochs):# helper arra
     print(f'Sample Size: {n_data}')
 
     start_time = time.perf_counter()
+
     # do this lots to get very good 
     for epoch in range(epochs):
         if epoch % 100 == 0:
@@ -118,22 +122,44 @@ def UCB_self_play_train_model(fpath, fname, params, model, epochs):# helper arra
 
     end_time = time.perf_counter()
 
-    print(f'Finished training, total elapsed time: {(end_time - start_time)/60.0:0.2f} minute(s).')
+    print(f'Finished training. Time elapsed: {(end_time - start_time)/60.0:0.2f} minute(s).')
 
     return params, pd.DataFrame(data)
 
-if __name__ == '__main__':
+def evaluate_expert_UCB(fpath, fname0, fname1, model, key):
+    params0 = pickle.load(open(fpath + fname0, 'rb'))
+    params1 = pickle.load(open(fpath + fname1, 'rb'))
 
+    agent0 = UCBRolloutExpertAgent(14, model, params0, 100)
+    agent1 = UCBRolloutExpertAgent(14, model, params1, 100)
+
+    key, subkey = jax.random.split(key)
+    sim = Simulator(init_game(100), [agent0, agent1], subkey)
+    results = sim.run()
+    print(f'Score: {jnp.mean(results)}')
+    print(f'Wins: {jnp.count_nonzero(results == -1)}')
+    print(f'Ties: {jnp.count_nonzero(results == 0)}')
+    print(f'Loses: {jnp.count_nonzero(results == 1)}')
+
+    
+    sim = Simulator(init_game(100), [agent1, agent0], subkey)
+    results = sim.run()
+    print(f'Score: {jnp.mean(results)}')
+    print(f'Wins: {jnp.count_nonzero(results == -1)}')
+    print(f'Ties: {jnp.count_nonzero(results == 0)}')
+    print(f'Loses: {jnp.count_nonzero(results == 1)}')
+
+if __name__ == '__main__':
     key = jax.random.PRNGKey(int(time.time()))
     pl = get_piece_locations()
 
+    # define the model
     def model(x):
         return hk.Sequential([
             hk.Linear(100, w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal')), jax.nn.relu,
             hk.Linear(100, w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal')), jax.nn.relu,
             hk.Linear(7, w_init=hk.initializers.VarianceScaling(2.0, 'fan_in', 'truncated_normal'))
         ])(x)
-
 
     model = hk.without_apply_rng(hk.transform(model))
 
@@ -143,14 +169,27 @@ if __name__ == '__main__':
     # initialize the parameters of the network
     params = model.init(subkey, state_to_array_3(t_game, pl))
 
+    key, subkey = jax.random.split(key)
+    evaluate_expert_UCB('./datasets/ucb_net_v2/', 'dataset_a_params.pk', 'dataset_9_params.pk', model, subkey)
+
+    '''
     for i in range(10):
-        print(f'Generation: {i}')
-        agent = UCBRolloutExpertAgent(1, model, params, 100)
+        start_time = time.perf_counter()
+        print(f'Generation # {i}')
+        agent = UCBRolloutExpertAgent(14, model, params, 100)
         key,subkey = jax.random.split(key)
-        fpath, fname = UCB_self_play(agent, 10, 'ucb_net', str(i), subkey)
+
+        # generate data through self play
+        fpath, fname = UCB_self_play(agent, 100, 'ucb_net_v2', str(i), subkey)
+
+        # train the network using data from self play
         new_params, training_data = UCB_self_play_train_model(fpath, fname, params, model, 100)
 
+        # save new parameters and loss over epoch to pickles
         pickle.dump(new_params, open(fpath + fname + '_params.pk', 'wb'))
         pickle.dump(training_data, open(fpath + fname + '_training_data.pk', 'wb'))
 
         params = new_params
+        end_time = time.perf_counter()
+        print(f'Generation # {i} complete. Time elapsed: {end_time - start_time} seconds')
+    '''

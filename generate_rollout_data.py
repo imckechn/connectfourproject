@@ -2,14 +2,8 @@ from environment.connect_four import *
 import agents
 from simulators.Simulator import Simulator
 import time
-
 import jax
-
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-import pickle
 
 def graph_rollout_parameter(shape, rollouts=[1, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000], opponent=agents.RolloutAgent(n_rollouts=100), config=default_config, key=None):
     data = {'rollouts':[], 'score':[]}
