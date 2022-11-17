@@ -59,7 +59,7 @@ class UCBRolloutAgent(agents.RolloutAgent):
         logits = jnp.where(legal, logits, jnp.finfo(float).min)
 
         choice = jax.random.categorical(key, logits, shape=shape)
-        
+
         if verbose:
             print(jax.nn.softmax(logits))
 
