@@ -12,6 +12,7 @@ from agents.GuidedRolloutAgent import GuidedRolloutAgent
 from agents.GuidedRandomAgent import GuidedRandomAgent
 from agents.RandomAgent import RandomAgent
 from agents.UCBRolloutExpertAgent import UCBRolloutExpertAgent
+from agents.PlayerAgent import PlayerAgent
 
 if __name__ == '__main__':
     jnp.set_printoptions(linewidth=100000, precision=4, edgeitems=5)
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     t_game = init_game(1)
 
     # load parameters from file
-    params = pickle.load(open('datasets/ucb_net_v9/dataset_19_params.pk', 'rb')) # REALLY GOOD
+    params = pickle.load(open('datasets/ucb_net_v9/dataset_25_params.pk', 'rb')) # REALLY GOOD
     #params = pickle.load(open('datasets/ucb_net_v9/dataset_1_params.pk', 'rb'))
     
     key, subkey = jax.random.split(key)
@@ -41,9 +42,10 @@ if __name__ == '__main__':
     guided_rollout = GuidedRolloutAgent(guided_random)
     rollout_agent = RolloutAgent(batch_size=1000)
     random_agent = RandomAgent()
-    ucb_expert = UCBRolloutExpertAgent(100, model, params, 14)
+    ucb_expert = UCBRolloutExpertAgent(60, model, params, 10)
+    player_agent = PlayerAgent()
 
-    sim = Simulator(init_game(100), [ucb_expert, rollout_agent], subkey)
+    sim = Simulator(init_game(1), [player_agent, ucb_expert], subkey)
 
     while(any_active_games(sim.game_state)):
         sim.step()

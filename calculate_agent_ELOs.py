@@ -98,6 +98,7 @@ def scores_to_ELO(sym_scores, loss_func):
     return ELO_ratings
 
 if __name__ == '__main__':
+    jnp.set_printoptions(linewidth=100000, precision=4, edgeitems=5)
 
     # define the model
     def model(x):
@@ -108,7 +109,6 @@ if __name__ == '__main__':
         ])(x)
 
     model = hk.without_apply_rng(hk.transform(model))
-    agent = load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_25_params.pk', model)
 
     agents = [
         agents.RolloutAgent(batch_size=200),
@@ -118,39 +118,37 @@ if __name__ == '__main__':
         load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_10_params.pk', model),
         load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_13_params.pk', model),
         load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_16_params.pk', model),
-        load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_19_params.pk', model)
+        load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_19_params.pk', model),
+        load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_25_params.pk', model)
     ]
 
     n_games = 100
     key = jax.random.PRNGKey(int(time.time()))
-    #scores = get_agent_scores(agents, n_games, key)
-    scores = get_agent_scores_against(agent, agents, 100, key)
-
+    scores = get_agent_scores(agents, n_games, key)
+    
     pickle.dump(scores.tolist(), open('./datasets/game_scores.pk', 'wb'))
     scores = np.array(pickle.load(open('./datasets/game_scores.pk', 'rb')))
-    print(scores)
+
     symmetric_scores = 0.5*(scores + (1 - scores).T)
 
-    #print(symmetric_scores)
-    #ELO = scores_to_ELO(symmetric_scores, L2_loss)
+    print(symmetric_scores)
+    ELO = scores_to_ELO(symmetric_scores, L2_loss)
 
-    #pickle.dump(ELO, open('./datasets/ucb_net_v9/elos.pk', 'wb'))
-'''
-    ELO = pickle.load(open('./datasets/ucb_net_v9/elos.pk', 'rb'))
+    #pickle.dump(ELO, open('./datasets/ucb_net_v9/elos2.pk', 'wb'))
+    ELO = pickle.load(open('./datasets/ucb_net_v9/elos2.pk', 'rb'))
 
     rollout_winrate = symmetric_scores.T[0]
-
+    
     fig, ax = plt.subplots()
-
+   
     p = jnp.linspace(0.05, 0.8, 150)
     rating = 400*jnp.log10(p/(1-p))
     ax.set_title('ELO scores of UCB Expert Agent')
-    ax.set_xlabel('Win rate vs Rollout AI (n=200)')
+    ax.set_xlabel('Win rate vs Rollout Agent')
     ax.set_ylabel('ELO score')
 
-    names = ['RO', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7']
-    y_off = [-30, 10, 10, 10, -30, -30, -30, 10, 15, -20]
-    y_off = [40, -40, 40, 40, -40, 40, 40, 40]
+    names = ['RO', 'G1', 'G4', 'G7', 'G10', 'G13', 'G16', 'G19', 'G25']
+    y_off = [30, -40, 30, 40, -50, 40, 40, -40, 30]
     ax.plot(p, rating, color='gold')
     ax.scatter(rollout_winrate, ELO)
 
@@ -160,5 +158,7 @@ if __name__ == '__main__':
     ax.text(0.1, 100, 'G = Generation')
 
     fig = plt.gcf()
-    fig.savefig('tournament_results.png', dpi=300)
-'''
+    fig.savefig('tournament_results_2.png', dpi=300)
+
+    print(f'{jnp.squeeze(ELO)}')
+

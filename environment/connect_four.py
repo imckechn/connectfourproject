@@ -1,4 +1,3 @@
-from email.policy import default
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
