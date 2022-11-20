@@ -128,8 +128,8 @@ if __name__ == '__main__':
     key = jax.random.PRNGKey(int(time.time()))
 
     #scores = get_agent_scores(agents, n_games, key)
-    #scores = get_agent_scores_against(agent, agents, n_games, key)
-    #pickle.dump(scores.tolist(), open('./datasets/game_scores2.pk', 'wb'))
+    scores = get_agent_scores_against(agent, agents, n_games, key)
+    pickle.dump(scores.tolist(), open('./datasets/game_scores75.pk', 'wb'))
 
     scores = pickle.load(open('./datasets/game_scores_full.pk', 'rb'))
 
