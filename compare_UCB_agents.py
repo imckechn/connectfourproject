@@ -60,12 +60,10 @@ def evaluate_agent_v_agent(n_games, agent0, agent1, key):
 
 if __name__ == '__main__':
     param_paths = [
-        ['./datasets/ucb_net_v9/dataset_1_params.pk', 'Generation 1'],
-        ['./datasets/ucb_net_v9/dataset_19_params.pk', 'Generation 19']
+        ['./datasets/ucb_net_v9/dataset_25_params.pk', 'Generation 25'],
+        ['./datasets/ucb_net_v9/dataset_39_params.pk', 'Generation 39']
     ]
-    #v6 - 45 - bad
-    #v6 - 36 - very good
-    #v6 - 38 - best
+    #v9 - 25 BEST SO FAR
 
     # define the model
     def model(x):
@@ -77,12 +75,7 @@ if __name__ == '__main__':
 
     model = hk.without_apply_rng(hk.transform(model))
 
-    params = load_params_from_file('./datasets/ucb_net_v9/dataset_19_params.pk')
-    agent = UCBRolloutExpertAgent(14, model, params, 100)
-    rollout = RolloutAgent(batch_size=200)
     key = jax.random.PRNGKey(int(time.time()))
-
-    evaluate_agent_v_agent(1, agent, rollout, key)
 
     data = {'agent0_name': [], 'agent1_name': [], 'agent_0_wins': [], 'agent_1_wins': [], 'ties': []}
 

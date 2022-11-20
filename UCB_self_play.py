@@ -155,10 +155,10 @@ if __name__ == '__main__':
 
     # initialize the parameters of the network
     params = model.init(subkey, state_to_array_2(t_game, pl))
-    #params = load_params_from_file('./datasets/ucb_net_v9/dataset_19_params.pk')
+    params = load_params_from_file('./datasets/ucb_net_v9/dataset_39_params.pk')
 
     evaluation_data={'agent0_name': [], 'agent1_name': [],  'agent0_wins': [], 'agent1_wins': [], 'ties': []}
-    for i in range(1, 30):
+    for i in range(41, 100):
         start_time = time.perf_counter()
         print(f'Generation # {i}')
         agent = UCBRolloutExpertAgent(100, model, params, 10)
@@ -183,10 +183,6 @@ if __name__ == '__main__':
             pickle.dump(new_params, open(fpath + fname + '_params.pk', 'wb'))
             pickle.dump(training_data, open(fpath + fname + '_training_data.pk', 'wb'))
             pickle.dump(pd.DataFrame(evaluation_data), open(fpath + fname + '_evaluation_data.pk', 'wb'))
-
-            winner = 1
-        else:
-            winner = 0
         
         params = new_params
 

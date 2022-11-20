@@ -33,7 +33,8 @@ if __name__ == '__main__':
     t_game = init_game(1)
 
     # load parameters from file
-    params = pickle.load(open('datasets/ucb_net_v9/dataset_25_params.pk', 'rb')) # REALLY GOOD
+    params = pickle.load(open('datasets/ucb_net_v9/dataset_50_params.pk', 'rb')) # REALLY GOOD
+    params2 = pickle.load(open('datasets/ucb_net_v9/dataset_25_params.pk', 'rb')) # GOOD
     #params = pickle.load(open('datasets/ucb_net_v9/dataset_1_params.pk', 'rb'))
     
     key, subkey = jax.random.split(key)
@@ -42,12 +43,14 @@ if __name__ == '__main__':
     guided_rollout = GuidedRolloutAgent(guided_random)
     rollout_agent = RolloutAgent(batch_size=1000)
     random_agent = RandomAgent()
-    ucb_expert = UCBRolloutExpertAgent(60, model, params, 10)
+    ucb_expert = UCBRolloutExpertAgent(100, model, params, 10)
+    ucb_expert2 = UCBRolloutExpertAgent(100, model, params2, 10)
     player_agent = PlayerAgent()
 
-    sim = Simulator(init_game(1), [player_agent, ucb_expert], subkey)
+    sim = Simulator(init_game(1), [ucb_expert, ucb_expert2], subkey)
 
     while(any_active_games(sim.game_state)):
+        print(jax.nn.softmax(model.apply(params, state_to_array_2(sim.game_state, pl))))
         sim.step()
         draw_game(sim.game_state)
 

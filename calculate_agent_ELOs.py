@@ -110,6 +110,8 @@ if __name__ == '__main__':
 
     model = hk.without_apply_rng(hk.transform(model))
 
+    agent = load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_50_params.pk', model)
+
     agents = [
         agents.RolloutAgent(batch_size=200),
         load_UCB_agent_from_file('./datasets/ucb_net_v9/dataset_1_params.pk', model),
@@ -124,31 +126,33 @@ if __name__ == '__main__':
 
     n_games = 100
     key = jax.random.PRNGKey(int(time.time()))
-    scores = get_agent_scores(agents, n_games, key)
-    
-    pickle.dump(scores.tolist(), open('./datasets/game_scores.pk', 'wb'))
-    scores = np.array(pickle.load(open('./datasets/game_scores.pk', 'rb')))
+
+    #scores = get_agent_scores(agents, n_games, key)
+    #scores = get_agent_scores_against(agent, agents, n_games, key)
+    #pickle.dump(scores.tolist(), open('./datasets/game_scores2.pk', 'wb'))
+
+    scores = pickle.load(open('./datasets/game_scores_full.pk', 'rb'))
 
     symmetric_scores = 0.5*(scores + (1 - scores).T)
 
     print(symmetric_scores)
-    ELO = scores_to_ELO(symmetric_scores, L2_loss)
+    #ELO = scores_to_ELO(symmetric_scores, L2_loss)
 
-    #pickle.dump(ELO, open('./datasets/ucb_net_v9/elos2.pk', 'wb'))
-    ELO = pickle.load(open('./datasets/ucb_net_v9/elos2.pk', 'rb'))
+    #pickle.dump(ELO, open('./datasets/ucb_net_v9/elos3.pk', 'wb'))
+    ELO = pickle.load(open('./datasets/ucb_net_v9/elos3.pk', 'rb'))
 
     rollout_winrate = symmetric_scores.T[0]
     
     fig, ax = plt.subplots()
    
-    p = jnp.linspace(0.05, 0.8, 150)
+    p = jnp.linspace(0.05, 0.9, 150)
     rating = 400*jnp.log10(p/(1-p))
     ax.set_title('ELO scores of UCB Expert Agent')
     ax.set_xlabel('Win rate vs Rollout Agent')
     ax.set_ylabel('ELO score')
 
-    names = ['RO', 'G1', 'G4', 'G7', 'G10', 'G13', 'G16', 'G19', 'G25']
-    y_off = [30, -40, 30, 40, -50, 40, 40, -40, 30]
+    names = ['RO', 'G1', 'G4', 'G7', 'G10', 'G13', 'G16', 'G19', 'G25', 'G50']
+    y_off = [30, -50, 30, 40, -50, 40, 40, -50, 30, -50]
     ax.plot(p, rating, color='gold')
     ax.scatter(rollout_winrate, ELO)
 
