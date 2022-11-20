@@ -46,7 +46,7 @@ class UCBRolloutExpertAgent(agents.UCBRolloutAgent):
         self.total_scores += self.sample_all_arms(state, subkey)
         self.counts += self.batch_size
         
-        self.nn_pred = jax.nn.softmax(self.model.apply(self.params, state_to_array_2(state, self.piece_locations)) / self.exploration_temp)[..., jnp.newaxis]
+        self.nn_pred = jax.nn.softmax(self.model.apply(self.params, state_to_array(state, self.piece_locations)) / self.exploration_temp)[..., jnp.newaxis]
 
         for i in jnp.arange(self.config['width'], self.time):
             key, subkey = jax.random.split(key)

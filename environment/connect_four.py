@@ -39,7 +39,7 @@ def get_piece_locations(config=default_config):
   return jnp.array([2 ** (col + config['width'] * row) for row in range(config['height']) for col in range(config['width'])], dtype=jnp.uint64)
 
 @jax.jit
-def state_to_array(state, piece_locations, config=default_config):
+def state_to_array_42(state, piece_locations, config=default_config):
   '''Represents the game state in an (..., 42), array'''
 
   current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
@@ -47,7 +47,7 @@ def state_to_array(state, piece_locations, config=default_config):
   return (current_player - 1 * opponent).astype(float)
 
 @jax.jit
-def state_to_array_2(state, piece_locations, config=default_config):
+def state_to_array(state, piece_locations, config=default_config):
   '''Represents the game state in an (..., 84), array'''
 
   current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))
@@ -55,7 +55,7 @@ def state_to_array_2(state, piece_locations, config=default_config):
   return jnp.concatenate([current_player, opponent], axis=-1).astype(float)
 
 @jax.jit
-def state_to_array_3(state, piece_locations, config=default_config):
+def state_to_array_126(state, piece_locations, config=default_config):
   '''Represents the game state in an (..., 126) array'''
 
   current_player = jnp.bitwise_not(is_empty_intersection(state[0], piece_locations))

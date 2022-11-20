@@ -93,13 +93,13 @@ def train_model_from_csv(fname, epochs, model, params, key, batch_size=None, ver
             batched_game_states = (position[i:i+batch_size], mask[i:i+batch_size], active[i:i+batch_size], move[i:i+batch_size])
             batched_probabilities = probabilities[i:i+batch_size]
 
-            x = state_to_array_3(batched_game_states, piece_locations)
+            x = state_to_array(batched_game_states, piece_locations)
             
             value, grads = value_and_grad_loss(params, x, batched_probabilities)
             updates, opt_state = optimizer.update(grads, opt_state)
             params = tx.apply_updates(params, updates)
 
-        x = state_to_array_3(game_states, piece_locations)
+        x = state_to_array(game_states, piece_locations)
         
         data['epoch'].append(epoch)
         data['CEL'].append(float(loss(params, x, probabilities)))
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     except:
         key = jax.random.PRNGKey(int(time.time()))
         t_game = init_game(1)
-        params = model.init(key, state_to_array_3(t_game, get_piece_locations()))
+        params = model.init(key, state_to_array(t_game, get_piece_locations()))
     
     key = jax.random.PRNGKey(int(time.time()))
     new_params, data = train_model_from_csv(args[1], int(args[2]), model, params, key, batch_size=batch_size)

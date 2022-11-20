@@ -51,7 +51,7 @@ if __name__ == '__main__':
     sim = Simulator(init_game(1000), [rollout_agent, ucb_expert], subkey)
 
     while(any_active_games(sim.game_state)):
-        print(jax.nn.softmax(model.apply(params, state_to_array_2(sim.game_state, pl))))
+        print(jax.nn.softmax(model.apply(params, state_to_array(sim.game_state, pl))))
         sim.step()
         draw_game(sim.game_state)
 

@@ -116,7 +116,7 @@ def UCB_self_play_train_model(fpath, fname, params, model, epochs):# helper arra
         if epoch % 100 == 0:
             print(f'Epoch # {epoch}')
 
-        x = state_to_array_2(game_states, piece_locations)
+        x = state_to_array(game_states, piece_locations)
         
         # calculate loss and gradients
         value, grads = value_and_grad_loss(params, x, probabilities)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     cpu_name = 'ucb_net_v9'
 
     # initialize the parameters of the network
-    params = model.init(subkey, state_to_array_2(t_game, pl))
+    params = model.init(subkey, state_to_array(t_game, pl))
     params = load_params_from_file('./datasets/ucb_net_v9/dataset_50_params.pk')
 
     evaluation_data={'agent0_name': [], 'agent1_name': [],  'agent0_wins': [], 'agent1_wins': [], 'ties': []}
