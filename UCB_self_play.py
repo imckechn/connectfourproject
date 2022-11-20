@@ -155,10 +155,10 @@ if __name__ == '__main__':
 
     # initialize the parameters of the network
     params = model.init(subkey, state_to_array_2(t_game, pl))
-    params = load_params_from_file('./datasets/ucb_net_v9/dataset_39_params.pk')
+    params = load_params_from_file('./datasets/ucb_net_v9/dataset_50_params.pk')
 
     evaluation_data={'agent0_name': [], 'agent1_name': [],  'agent0_wins': [], 'agent1_wins': [], 'ties': []}
-    for i in range(41, 100):
+    for i in range(51, 100):
         start_time = time.perf_counter()
         print(f'Generation # {i}')
         agent = UCBRolloutExpertAgent(100, model, params, 10)

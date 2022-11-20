@@ -44,10 +44,11 @@ if __name__ == '__main__':
     rollout_agent = RolloutAgent(batch_size=1000)
     random_agent = RandomAgent()
     ucb_expert = UCBRolloutExpertAgent(100, model, params, 10)
-    ucb_expert2 = UCBRolloutExpertAgent(100, model, params2, 10)
+    ucb_expert2 = UCBRolloutExpertAgent(100, model, params, 10)
+
     player_agent = PlayerAgent()
 
-    sim = Simulator(init_game(1), [ucb_expert, ucb_expert2], subkey)
+    sim = Simulator(init_game(1000), [rollout_agent, ucb_expert], subkey)
 
     while(any_active_games(sim.game_state)):
         print(jax.nn.softmax(model.apply(params, state_to_array_2(sim.game_state, pl))))

@@ -18,7 +18,7 @@ class UCBRolloutExpertAgent(agents.UCBRolloutAgent):
         self.params = params
         self.rollout_agent = agents.GuidedRandomAgent(model, params)
         self.temperature = 0.1
-        self.exploration_temp = 2.5
+        self.exploration_temp = 1
 
     def get_ucb_scores(self, state, time):
         '''Calculates the ucb score according to the UCB-selection rule'''
